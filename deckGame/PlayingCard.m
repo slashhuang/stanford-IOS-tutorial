@@ -9,7 +9,18 @@
 #import "PlayingCard.h"
 
 @implementation PlayingCard
-
+-(int)match:(NSArray *)otherCards{
+    int score = 0 ;
+    if([otherCards count]==1){
+        PlayingCard *otherCard = [otherCards firstObject];
+        if(otherCard.rank==self.rank){
+            score =4;
+        }else if([otherCard.suit isEqualToString:self.suit]){
+            score =1;
+        }
+    }
+    return score;
+}
 
 - (NSString *)contents//覆盖父类接口中的contents的getter方法，同时所有的声明只是继承自父类而已
 {

@@ -7,42 +7,50 @@
 //
 
 #import "ViewController.h"
+//<>和""引入模块的区别在于，寻址方式是在当前项目下，还是系统(框架)配置的头文件寻找
+#import "PlayingCardDeck.h"
+#import "CardMatchingGame.h"
 
 @interface ViewController ()
-@property (weak, nonatomic) IBOutlet UILabel *flipsLabel;//与view强相关，所以weak足矣
-@property (nonatomic) int flipCount;
+@property (strong,nonatomic)CardMatchingGame *game;//新增数据逻辑
+@property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *cardButttons;//outletCollection的每一项都是个button实例
+@property (weak, nonatomic) IBOutlet UILabel *scoreLabel;
 @end
 
 @implementation ViewController
 
-//- (Deck *)deck{
-//    if(!_deck) _deck= [self createDeck];
-//    return _deck;
-//}
+-(CardMatchingGame *)game
+{
+    if(!_game) _game=[[CardMatchingGame alloc] initWithCardCount:[self.cardButttons count] usingDeck:[self createDeck]];
+    return _game;
+}
 
-//- (Deck *)createDeck{
-//    return [[playingCardDeck alloc] init];
-//}
-- (void) setFlipCount:(int)flipCount{
-    _flipCount = flipCount;
-    self.flipsLabel.text = [NSString stringWithFormat:@"Flips: %d",self.flipCount];
-    NSLog(@"flip is now %d",self.flipCount);
+- (Deck *)createDeck{
+    return [[PlayingCardDeck alloc] init];
 }
 - (IBAction)touchCard:(UIButton *)sender {
-    if ([sender.currentTitle isEqualToString:@"A"]) {
-        [sender setBackgroundImage:[UIImage imageNamed:@"cardBack"]
-                          forState:UIControlStateNormal];
-        //        sender.imageEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
-        [sender setTitle:@"B"
-                forState:UIControlStateNormal];
-    }else{
-//        Card *card = [self.deck.drawRandomCard];
-        [sender setBackgroundImage:[UIImage imageNamed:@"cardFront"]
-                          forState:UIControlStateNormal];
-        //        sender.imageEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
-        [sender setTitle:@"A" forState:UIControlStateNormal];
+    //所有的数据逻辑都在model里面
+    int buttonChosenIndex = [self.cardButttons indexOfObject:sender];
+    [self.game chooseCardAtIndex:buttonChosenIndex];
+    [self updateUI];
+}
+-(void)updateUI{
+    for (UIButton *cardButton in self.cardButttons ) {
+        int cardButtonIndex = [self.cardButttons indexOfObject:cardButton];
+        Card *card =[self.game cardAtIndex:cardButtonIndex];
+        [cardButton setTitle:[self titleForCard:card] forState:UIControlStateNormal];
+        [cardButton setBackgroundImage:[self backgroundImageForCard:card]forState:UIControlStateNormal];
+        cardButton.enabled = !card.isMatched;
+        self.scoreLabel.text = [NSString stringWithFormat:@"score:%d",self.game.score];
     }
-    self.flipCount++;
+}
+-(NSString *)titleForCard:(Card *)card
+{
+    return card.isChosen?card.contents:@"";
+}
+-(UIImage *)backgroundImageForCard:(Card *)card
+{
+    return [UIImage imageNamed:card.isChosen?@"cardFront":@"cardBack"];
 }
 
 @end
